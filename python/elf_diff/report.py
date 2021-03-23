@@ -34,9 +34,13 @@ class Report(object):
       else:
          html_file = "elf_diff_" + self.getReportBasename() + ".html"
          
+      keywords = self.configureJinjaKeywords(False)
+      
       print("Writing html file " + html_file)
       with codecs.open(html_file, "w", "utf-8") as f:
-         self.writeHTML(f)
+         self.writeHTML(f, keywords)
+      with open("elf_mod_fun_{}.txt".format(self.getReportBasename()), "w") as f:
+         self.writeModifiedFunctions(f, keywords)
          
       if self.settings.pdf_file:
          
@@ -46,7 +50,7 @@ class Report(object):
             "/" + next(tempfile._get_candidate_names()) + ".html"
                 
          with codecs.open(tmp_html_file, "w", "utf-8") as f:
-            self.writeHTML(f, skip_details = True)
+            self.writeHTML(f, self.configureJinjaKeywords(True))
          
          import pdfkit
          pdfkit.from_url(tmp_html_file, self.settings.pdf_file)
@@ -54,11 +58,11 @@ class Report(object):
          import os
          os.remove(tmp_html_file)
          
-   def writeHTML(self, out_file, skip_details = False):
-      
-      keywords = self.configureJinjaKeywords(skip_details)
-      
+   def writeHTML(self, out_file, keywords):
       html.configureTemplateWrite(self.settings, \
                                   self.getHTMLTemplate(), \
                                   out_file, \
                                   keywords)
+
+   def writeModifiedFunctions(self, out_file, keywords):
+      out_file.write('\n'.join(keywords['symbols_changed']))

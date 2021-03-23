@@ -67,6 +67,8 @@ class PairReport(Report):
       sorted_by_diff = sorted(diff_by_symbol.items(), key=operator.itemgetter(1), reverse=True)   
       
       size_delta = 0
+
+      changed_symbols = []
       
       for symbol_tuple in sorted_by_diff:
          
@@ -80,6 +82,7 @@ class PairReport(Report):
          
          if old_symbol.size != new_symbol.size:
             symbol_name_html = html.escapeString(symbol_name)
+            changed_symbols.append(symbol_name)
             table_html += "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n" % ( \
                               html.generateSymbolTableEntry(symbol_name_html), \
                               new_symbol.type, \
@@ -92,7 +95,7 @@ class PairReport(Report):
       else:
          table_visible = True
             
-      return [table_html, table_visible, html.highlightNumber(size_delta)]
+      return [table_html, table_visible, html.highlightNumber(size_delta), changed_symbols]
       
    def generateDisappearedSymbolsTableHTML(self):
       
@@ -309,7 +312,7 @@ class PairReport(Report):
       else:
          doc_title = "ELF Binary Comparison"
          
-      [persisting_symbols_table, persisting_symbols_table_visible, persisting_symbols_delta] = self.generatePersistingSymbolsTableHTML()
+      [persisting_symbols_table, persisting_symbols_table_visible, persisting_symbols_delta, symbols_changed] = self.generatePersistingSymbolsTableHTML()
       [disappeared_symbols_table, disappeared_symbols_table_visible, disappeared_symbols_size] = self.generateDisappearedSymbolsTableHTML()
       [new_symbols_table, new_symbols_table_visible, new_symbols_size] = self.generateNewSymbolsTableHTML()
       [similar_symbols_table, similar_symbols_table_visible, num_similar_symbols] = self.generateSimilarSymbolsTableHTML()
@@ -396,6 +399,8 @@ class PairReport(Report):
          ,"build_info": html.escapeString(self.settings.build_info)
          
          ,"date" : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+         
+         ,"symbols_changed" : symbols_changed # not escaped, do not print in the HTML
       }
    
    def getHTMLTemplate(self):
